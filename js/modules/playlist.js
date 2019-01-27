@@ -1,11 +1,11 @@
 import { songsList } from "../data/songs.js";
+import PlayInfo from "./play-info.js";
 
 const Playlist = (_ => {
   // data or state
   let songs = songsList;
   let currentlyPlayingIndex = 0;
   let currentSong = new Audio(songs[currentlyPlayingIndex].url);
-  let isPlaying = false;
 
   // cache the DOM
   const playlistEl = document.querySelector(".playlist");
@@ -13,6 +13,15 @@ const Playlist = (_ => {
   const init = _ => {
     render();
     listeners();
+    PlayInfo.setState({
+      songsLength: songs.length,
+      isPlaying: !currentSong.paused
+    });
+  };
+
+  const flip = _ => {
+    togglePlayPause();
+    render();
   };
 
   const changeAudioSrc = _ => {
@@ -34,13 +43,22 @@ const Playlist = (_ => {
       changeAudioSrc();
       togglePlayPause();
     }
+    PlayInfo.setState({
+      songsLength: songs.length,
+      isPlaying: !currentSong.paused
+    });
+  };
+
+  const playNext = _ => {
+    if (songs[currentlyPlayingIndex] + 1) {
+      currentlyPlayingIndex++;
+      currentSong.src = songs[currentlyPlayingIndex].url;
+      togglePlayPause();
+      render();
+    }
   };
 
   const listeners = () => {
-    // 1. get the index of the li tag
-    // 2. change the currentplayingindex to index of the li tag
-    // 3. play or pause
-    // 4. if it's not the same song, then change source to tha new song
     playlistEl.addEventListener("click", event => {
       if (event.target && event.target.matches(".fa")) {
         const listElem = event.target.parentNode.parentNode;
@@ -50,6 +68,9 @@ const Playlist = (_ => {
         mainPlay(listElemIndex);
         render();
       }
+    });
+    currentSong.addEventListener("ended", _ => {
+      playNext();
     });
   };
 
@@ -86,7 +107,8 @@ const Playlist = (_ => {
   };
 
   return {
-    init
+    init,
+    flip
   };
 })();
 
